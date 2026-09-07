@@ -1,0 +1,105 @@
+{% extends "chores/base.html" %}
+
+{% block title %}Все дела — Домашние дела{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">Общий список семьи</p>
+        <h1>Домашние дела</h1>
+        <p class="lead">Следите за сроками и отмечайте выполненное.</p>
+    </div>
+    <a class="button" href="{% url 'chores:chore_create' %}">Добавить дело</a>
+</section>
+
+<section class="summary-grid" aria-label="Сводка по делам">
+    <a class="summary-card{% if selected_status == 'all' %} active{% endif %}" href="{% url 'chores:chore_list' %}?status=all{% if selected_assignee %}&amp;assignee={{ selected_assignee.pk }}{% endif %}">
+        <span>Все</span>
+        <strong>{{ summary.all }}</strong>
+    </a>
+    <a class="summary-card upcoming{% if selected_status == 'upcoming' %} active{% endif %}" href="{% url 'chores:chore_list' %}?status=upcoming{% if selected_assignee %}&amp;assignee={{ selected_assignee.pk }}{% endif %}">
+        <span>Предстоящие</span>
+        <strong>{{ summary.upcoming }}</strong>
+    </a>
+    <a class="summary-card overdue{% if selected_status == 'overdue' %} active{% endif %}" href="{% url 'chores:chore_list' %}?status=overdue{% if selected_assignee %}&amp;assignee={{ selected_assignee.pk }}{% endif %}">
+        <span>Просроченные</span>
+        <strong>{{ summary.overdue }}</strong>
+    </a>
+    <a class="summary-card completed{% if selected_status == 'completed' %} active{% endif %}" href="{% url 'chores:chore_list' %}?status=completed{% if selected_assignee %}&amp;assignee={{ selected_assignee.pk }}{% endif %}">
+        <span>Выполненные</span>
+        <strong>{{ summary.completed }}</strong>
+    </a>
+</section>
+
+<section class="panel filters-panel">
+    <form method="get" class="filters">
+        <div class="field compact-field">
+            <label for="status">Состояние</label>
+            <select name="status" id="status">
+                <option value="all"{% if selected_status == 'all' %} selected{% endif %}>Все дела</option>
+                <option value="upcoming"{% if selected_status == 'upcoming' %} selected{% endif %}>Предстоящие</option>
+                <option value="overdue"{% if selected_status == 'overdue' %} selected{% endif %}>Просроченные</option>
+                <option value="completed"{% if selected_status == 'completed' %} selected{% endif %}>Выполненные</option>
+            </select>
+        </div>
+        <div class="field compact-field">
+            <label for="assignee">Ответственный</label>
+            <select name="assignee" id="assignee">
+                <option value="">Все участники</option>
+                {% for member in members %}
+                    <option value="{{ member.pk }}"{% if selected_assignee.pk == member.pk %} selected{% endif %}>{{ member.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button class="button button-secondary" type="submit">Применить</button>
+        {% if selected_status != 'all' or selected_assignee %}
+            <a class="text-link" href="{% url 'chores:chore_list' %}">Сбросить</a>
+        {% endif %}
+    </form>
+</section>
+
+<section class="chore-list" aria-label="Список дел">
+    {% for occurrence in occurrences %}
+        <article class="chore-card{% if occurrence.is_completed %} is-completed{% elif occurrence.is_overdue %} is-overdue{% endif %}">
+            <div class="chore-main">
+                <div class="chore-title-row">
+                    <h2>{{ occurrence.schedule.title }}</h2>
+                    {% if occurrence.is_completed %}
+                        <span class="badge badge-completed">Выполнено</span>
+                    {% elif occurrence.is_overdue %}
+                        <span class="badge badge-overdue">Просрочено</span>
+                    {% else %}
+                        <span class="badge badge-upcoming">Предстоит</span>
+                    {% endif %}
+                </div>
+                <div class="chore-meta">
+                    <span><strong>Кто:</strong> {{ occurrence.schedule.assignee.name }}</span>
+                    <span><strong>Когда:</strong> {{ occurrence.due_at|date:"d.m.Y, H:i" }}</span>
+                    <span><strong>Повтор:</strong> {{ occurrence.schedule.get_recurrence_display }}</span>
+                </div>
+            </div>
+            {% if not occurrence.is_completed %}
+                <form method="post" action="{% url 'chores:chore_complete' occurrence.pk %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button class="button button-success" type="submit">Готово</button>
+                </form>
+            {% else %}
+                <p class="completion-time">{{ occurrence.completed_at|date:"d.m.Y, H:i" }}</p>
+            {% endif %}
+        </article>
+    {% empty %}
+        <div class="empty-state panel">
+            <div class="empty-icon" aria-hidden="true">☀</div>
+            <h2>Здесь пока пусто</h2>
+            {% if selected_status != 'all' or selected_assignee %}
+                <p>Дел с такими фильтрами не найдено.</p>
+                <a class="button button-secondary" href="{% url 'chores:chore_list' %}">Показать все</a>
+            {% else %}
+                <p>Добавьте первое домашнее дело и назначьте ответственного.</p>
+                <a class="button" href="{% url 'chores:chore_create' %}">Добавить дело</a>
+            {% endif %}
+        </div>
+    {% endfor %}
+</section>
+{% endblock %}

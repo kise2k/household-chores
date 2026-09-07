@@ -1,0 +1,44 @@
+{% extends "chores/base.html" %}
+
+{% block title %}Новое дело — Домашние дела{% endblock %}
+
+{% block content %}
+<section class="page-heading narrow-heading">
+    <div>
+        <p class="eyebrow">Распределите обязанность</p>
+        <h1>Новое дело</h1>
+        <p class="lead">Укажите ответственного, первый срок и расписание.</p>
+    </div>
+</section>
+
+<section class="panel form-panel">
+    {% if not form.fields.assignee.queryset.exists %}
+        <div class="callout">
+            Сначала <a href="{% url 'chores:member_list' %}">добавьте участника семьи</a>.
+        </div>
+    {% endif %}
+
+    <form method="post" class="stacked-form" novalidate>
+        {% csrf_token %}
+        {% for error in form.non_field_errors %}
+            <p class="error-text">{{ error }}</p>
+        {% endfor %}
+        {% for field in form %}
+            <div class="field{% if field.errors %} field-error{% endif %}">
+                {{ field.label_tag }}
+                {{ field }}
+                {% if field.help_text %}
+                    <p class="help-text">{{ field.help_text }}</p>
+                {% endif %}
+                {% for error in field.errors %}
+                    <p class="error-text">{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endfor %}
+        <div class="form-actions">
+            <button class="button" type="submit">Создать дело</button>
+            <a class="button button-secondary" href="{% url 'chores:chore_list' %}">Отмена</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

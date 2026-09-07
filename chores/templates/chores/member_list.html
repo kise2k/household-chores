@@ -1,0 +1,62 @@
+{% extends "chores/base.html" %}
+
+{% block title %}Участники — Домашние дела{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">Одна семья, одна команда</p>
+        <h1>Участники</h1>
+        <p class="lead">Добавьте людей, которым можно назначать дела.</p>
+    </div>
+</section>
+
+<div class="two-column">
+    <section class="panel">
+        <h2>Новый участник</h2>
+        <form method="post" class="stacked-form" novalidate>
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="field{% if field.errors %} field-error{% endif %}">
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% for error in field.errors %}
+                        <p class="error-text">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+            <button class="button" type="submit">Добавить</button>
+        </form>
+    </section>
+
+    <section class="panel">
+        <div class="panel-heading">
+            <h2>Семья</h2>
+            <span class="count-pill">{{ members|length }}</span>
+        </div>
+        <div class="member-list">
+            {% for member in members %}
+                <div class="member-row">
+                    <div class="avatar" aria-hidden="true">{{ member.name|first|upper }}</div>
+                    <div class="member-info">
+                        <strong>{{ member.name }}</strong>
+                        <span>{{ member.schedule_count }} назначенных дел</span>
+                    </div>
+                    {% if member.schedule_count == 0 %}
+                        <form method="post" action="{% url 'chores:member_delete' member.pk %}">
+                            {% csrf_token %}
+                            <button class="button-link danger-link" type="submit">Удалить</button>
+                        </form>
+                    {% else %}
+                        <span class="muted-label">Есть дела</span>
+                    {% endif %}
+                </div>
+            {% empty %}
+                <div class="empty-state compact-empty">
+                    <p>Участников пока нет. Добавьте первого слева.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock %}

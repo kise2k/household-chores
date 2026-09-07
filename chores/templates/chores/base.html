@@ -1,0 +1,37 @@
+{% load static %}
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Домашние дела{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'chores/styles.css' %}">
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav container" aria-label="Основная навигация">
+            <a class="brand" href="{% url 'chores:chore_list' %}">
+                <span class="brand-mark" aria-hidden="true">✓</span>
+                Домашние дела
+            </a>
+            <div class="nav-links">
+                <a href="{% url 'chores:chore_list' %}">Все дела</a>
+                <a href="{% url 'chores:member_list' %}">Участники</a>
+                <a class="button button-small" href="{% url 'chores:chore_create' %}">Новое дело</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container page-content">
+        {% if messages %}
+            <div class="messages" aria-live="polite">
+                {% for message in messages %}
+                    <div class="message message-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
